@@ -1,0 +1,37 @@
+1. fork：子进程拷贝父进程的数据段，代码段...
+    vfork: 子进程与父进程共享数据。
+2.fork:子进程与父进程运行先后顺序不明确。
+  vfork:必须子进程先运行完。父进程才能向下推进。
+eg:
+#include<sys/types.h>
+#include<unistd.h>
+#include<stdio.h>
+ 
+int main()
+{
+    pid_t pid;
+    int cnt = 0;
+    pid = vfork();
+    if(pid<0)
+        printf("error in fork!\n");
+    else if(pid == 0)
+    {
+        cnt++;
+        printf("cnt=%d\n",cnt);
+        printf("I am the child process,ID is %d\n",getpid());
+       _exit(0);
+    }
+    else
+    {
+        cnt++;
+        printf("cnt=%d\n",cnt);
+        printf("I am the parent process,ID is %d\n",getpid());
+    }
+    return 0;
+}
+运行结果：
+[root@localhost fork]# ./fork3
+cnt=1
+I am the child process,ID is 4711
+cnt=2
+I am the parent process,ID is 4710
