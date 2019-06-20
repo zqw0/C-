@@ -1,0 +1,23 @@
+让父子进程执行不相干的操作。
+能够替换进程地址空间中的源代码.txt段
+1.执行指定目录下的程序
+int execl(const char *path,const char *arg...);
+path:：要执行的程序的绝对路径
+变参arg：：要执行程序的需要的参数。
+第一位arg:占位
+后边的arg：程序需要的参数。
+参数写完后：NULL。
+eg:
+pid_t pid;
+pid=fork();
+if(pid==0){
+execl("/tmp/hello","hello",NULL);//”hello“占位并没有什么用，NULL，表示参数的结束。
+}
+cout<<"11111"<<endl;
+//此程序运行完之后，只会输出一次11111。因为子进程中的代码段被替换。
+
+2.执行PATH环境变量能够搜索到的程序
+int execlp（const char *file,const char *arg....）;
+参数意义同第一个。
+功能在path环境变量的路径中查找此程序。如果有就替换进来。
+如果没有就报错。
