@@ -1,0 +1,22 @@
+1.static_cast
+用于普通的转换如：
+int i;
+double a;
+i=static_cast<int>(a);
+2.const_cast
+可以将带const关键字去掉。
+const int i=10;
+int a =const_cast<int>(i);
+3.dynamic_cast.
+用于基类指针指向的内容是派生类，
+而又想将基类指针强制转换成派生类指针的时候。
+且必须要有虚函数。
+eg:
+class a{
+virtual fun(){}
+};
+class b:a{
+fun(){}
+};
+a *aa=new b;
+b *bb=dynamic_cast<b*>(aa);
