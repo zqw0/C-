@@ -1,0 +1,21 @@
+decltype
+意义：有时我们希望从表达式的类型推断出要定义的变量类型，但是不想用该表达式的值初始化变量（如果要初始化
+就用auto）。decltype的作用是选择并返回操作数的数据类型，在此过程中，编译器分析表达式并得到他的类型，不
+实际计算表达式的值。
+1.普通
+int main(){
+    int tema=2;
+    decltype(tema) a;//a为int类型
+}
+2.引用
+int main(){
+    int a,&b=a;
+    decltype(b) refa=a;//引用类型，必须绑定值
+}
+3.指针
+int main(){
+    int a=2;
+    int *ptr_a=&a;
+    decltype(ptr_a) dec_a;///为int*类型
+    decltype(*ptr_a) dec_aa=a;///解引用操作，dec_aa为引用，需要绑定值
+}
