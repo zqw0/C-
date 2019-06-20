@@ -1,0 +1,23 @@
+new执行了三步操作。
+第一步，new表达式调用一个名为operator new或者operator的标准库函数。该函数分配一块足够大的，原始的，未命名的内存空间
+以便存储特定类型对象。
+第二步，编译器运行相应的构造函数以构造这些对象，并为其传入初始值。
+第三部，对象呗分配了空间并构造完成。返回一个指向该对象的指针。
+delete执行了两步操作。
+第一步，对指针所指向的对象或数组中的元素执行对象的析构函数。
+第二步，编译器调用名为operator delete的标准库函数释放内存空间。
+
+operator new 接口和operator delete接口
+void *operator new(size_t);
+void *operator new[](size_t);
+void *operator delete(size_t);
+void *operator delete[](size_t);
+
+应用程序可以自定义上面函数的任意一个。前提是自定义的版本必须位于全局作用域或者类作用域。
+void *operator new(size_t size){
+if(void *mem=malloc(size))
+return mem;
+else throw bad_alloc();
+}
+
+void *operator delete(void *mem) noexcept {free(mem);}
