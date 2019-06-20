@@ -1,0 +1,46 @@
+allocator的介绍。
+像new和delete是将类的构造函数与析构函数进行绑定的。
+eg:
+class a{
+a(){cout<<"1"<<endl;}
+a(int x){cout<<"2"<<endl;}
+};
+a *tem=new a[5]();
+这样一下开辟了5个连续的a类，且都使用了第一个构造函数。那么我想混合使用两种构造函数，又要连续开辟空间。
+那么new就不够用了。所以引出allocator。
+allocator可以将开辟空间，对空间进行构造分成两步来使用。对空间使用析构函数，回收空间，也分两步来使用。
+用法：
+allocator<T> a;//定义了一个名为a的allocator对象，它可以为类型为T的对象分配内存。
+a.allocate(n);//分配一段原始的，未构造的内存，保存n个类型为T的对象。
+a.deallocate(p,n);//释放从T*指针p中地址开始的内存，这块内存保存了n个类型为T的对象；p必须是一个先前由allocate返回的
+                             指针，且n必须是p创建时所要求的大小。再调用deallocate之前，用户必须对每个在这块内存中创建的对象
+                             调用destroy
+a.construct(p,args);// p必须是一个类型为T*的指针，指向一块原始内存；arg被传递给类型为T的构造函数，用来在p指向的内存中构造
+                                一个对象
+a.destroy(p);// p为T*类型的指针，此算法对P指向的对象执行析构函数。
+eg:
+#include<iostream>
+#include<algorithm>
+#include<map>
+#include<stack>
+using namespace std;
+class test{
+public:
+    int a,b,c;
+    test(int cs1):a(cs1){}
+    test(int cs1,int cs2):a(cs1),b(cs2){}
+    test(int cs1,int cs2,int cs3):a(cs1),b(cs2),c(cs3){}
+    ~test(){cout<<"goodbye"<<endl;}
+};
+int main(){
+    allocator<test> a;
+    auto tt=a.allocate(3);
+    a.construct(tt++,1);
+    a.construct(tt++,2,3);
+    a.construct(tt++,3,4,5);
+    int cnt=2;
+    while(cnt--){
+        a.destroy(--tt);
+    }
+    a.deallocate(tt,3);
+}
