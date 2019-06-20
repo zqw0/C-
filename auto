@@ -1,0 +1,28 @@
+auto:自动推断类型
+1.typeid运算符可以输出变量类型
+int a=10;
+auto b=a;
+cout<<typeid(b).name()<<endl;
+2.与decltype联合使用
+template<typename t1,typename t2>
+auto mut(t1 x,t2 y)->decltype(x*y){
+    return x*y;
+}
+3.引用需要自己添加
+int a=10;
+int &b=a;
+auto c=b;//C为int；
+auto &d=b;//d为int&;
+4.const需要自己添加
+const int a1=10;
+auto b=a1;//b为int；
+const auto c=a1;//c为const int
+5.添加&不去除const
+const int a=19;
+auto &b=a;//b为const int
+6.不添加&推断数组为指针
+int a[3];
+auto b=a;//b为指针
+7.添加&推断数组为数组
+int a[3];
+auto &b=a;//b为数组
