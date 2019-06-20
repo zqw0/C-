@@ -1,0 +1,155 @@
+               unique_ptr
+
+智能指针的创建
+unique_ptr<int> u_i;//创建空智能指针
+u_i.reset(new int(3));//绑定动态对象
+unique_ptr<int> u_i(new int(4));//创建时指定动态对象
+
+//所有权变化
+int *p=u_i2.release();//释放所有权
+unique_ptr<string> u_s(new string("abc"));
+unique_ptr<string> u_s2=move(u_s);//所有权转让，通过右值引用
+u_s2.reset(u_s.release());//所有权转让
+
+unique_ptr不能被拷贝，只能通过右值引用来转让所有权。
+
+                   shared_ptr
+
+智能指针的创建
+
+shared_ptr<int> pt(new int);
+shared_ptr<int> pt1=pt;
+p.reset();//若p是唯一指向其对象的share_ptr,reset会释放此对象，若传递了可选的参数内置指针q，会令q指向p，否则
+p.reset(q);//会将p置为空。若还传递了参数d,将会调用d而不是delete来释放q。
+p.reset(q,d);
+使用了引用计数
+具体实现：
+#include<bits/stdc++.h>
+#include<memory>
+using namespace std;
+class refptr{
+private:
+    int *p;
+    int cnt;
+    friend class smartptr;
+    refptr(int *pt):p(pt),cnt(1){}
+   ~refptr(){delete p;}
+};
+class smartptr{
+public:
+    smartptr(int *pt):rp(new refptr(pt)){}
+    smartptr(smartptr &pt):rp(pt.rp){rp->cnt++;}
+    smartptr&operator=(smartptr& pt){
+        pt.rp->cnt++;
+        if(--this->rp->cnt==0) delete this->rp;
+        this->rp=pt.rp;
+        return *this;
+    }
+
+    int*operator->(){
+        return this->rp->p;
+    }
+
+    int&operator*(){
+        return *(this->rp->p);
+    }
+
+    ~smartptr(){
+        if(--rp->cnt==0) delete rp;
+        else cout<<"还有多少个"<<rp->cnt<<endl;
+    }
+private:
+    refptr *rp;
+};
+int main(){
+    int a=10;
+    smartptr sptr(&a);
+    smartptr sptr1=sptr;
+    smartptr sptr2;
+    return 0;
+}
+
+
+                 weak_ptr:
+
+
+weak_ptr是为了配合shared_ptr而引入的一种智能指针，它更像是share_ptr的一个助手
+而不是智能指针，因为它不具有普通指针的行为。没有重载*和->因此取名weak.表明
+其是功能比较弱的智能指针。它的最大作用在于协助share_ptr工作，可获得资源的观测权
+。像旁观者那样观测资源的使用情况。观测者意味着weak_ptr只对share_ptr进行引用，
+而不改变其引用计数，当被观察的shard_ptr失效后，相应的weak_ptr也会失效。
+
+weak_ptr<T> w; //创建空weak_ptr,可以指向类型为T的对象
+weak_ptr<T> w(sp);//与shared_ptr指向相同的对象，shared_ptr引用计数不变
+w=p;//p可以是share_ptr或者weak_prt，赋值后w与p共享对象
+w.reset();//将w置空
+w.use_count();//返回与w共享对象的share_ptr
+w.expired();//若w.use_count()为0。返回true.否侧false;
+w.lock();//如果expired()为true，则返回空的shared_ptr，否则返回非空
+
+share_ptr使用不当会导致循环引用
+eg:
+#include<bits/stdc++.h>
+#include<memory>
+using namespace std;
+#include <iostream>
+#include <memory>
+
+class Woman;
+class Man
+{
+private:
+    //std::weak_ptr<Woman> _wife;
+    std::shared_ptr<Woman> _wife;
+public:
+    void setWife(std::shared_ptr<Woman> woman)
+    {
+        _wife = woman;
+    }
+
+    void doSomthing()
+    {
+    }
+
+    ~Man()
+    {
+        std::cout << "kill man\n";
+    }
+};
+
+class Woman
+{
+private:
+    //std::weak_ptr<Man> _husband;
+    std::shared_ptr<Man> _husband;
+public:
+    void setHusband(std::shared_ptr<Man> man)
+    {
+        _husband = man;
+    }
+    ~Woman()
+    {
+        std::cout <<"kill woman\n";
+    }
+};
+
+int main()
+{
+    std::shared_ptr<Man> m(new Man());
+    std::shared_ptr<Woman> w(new Woman());
+        m->setWife(w);
+        w->setHusband(m);
+    return 0;
+}
+理解：：
+当析构第一个w->setHusband(m);时。没有问题。指向man的share_ptr-1;指向woman的share_ptr-1；
+当析构第二个m->setWife(w);时会出现问题。首先应该析构man类中指向woman类的share_ptr。
+而要想析构woman类，又必须要先析构woman类中指向man类的share_ptr，就造成了无穷的循环。最终导致内存泄漏。
+
+使用weak_ptr来打破循环引用，方法：取消代码中注释的任一一行即可，或者全部都取消注释
+
+另一个很自然的问题是：既然weak_ptr不增加资源的引用计数，那么在使用weak_ptr对象的时候，
+资源被突然释放了怎么办？因为不能直接通过weak_ptr来访问资源，那么如何通过weak_ptr来
+间接的访问资源呢，答案是在需要访问资源的时候weak_ptr为你生成一个share_ptr，
+share_ptr能够保证在share_ptr没有被释放之前，其所管理的资源是不会被释放的。
+创建share_ptr的方法就是lock成员函数。
